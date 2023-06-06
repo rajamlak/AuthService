@@ -1,0 +1,36 @@
+package com.book.store.services;
+
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import com.book.store.dao.UserDAO;
+import com.book.store.models.User;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
+@Service
+public class UserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
+    @Autowired
+    UserDAO userDAO;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Optional<User> user = userDAO.findUserByEmail(email);
+        if(user.isPresent()) {
+            User _user = user.get();
+            return  new org.springframework.security.core.userdetails.User(_user.getEmail(), _user.getPassword(), getAuthority(_user));
+        }
+        return null;
+    }
+    private Set<SimpleGrantedAuthority> getAuthority(User user) {
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString()));
+        return authorities;
+    }
+}
